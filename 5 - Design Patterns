@@ -1,0 +1,128 @@
+🔹 5. Design Patterns (Tasarım Kalıpları)
+
+❓ Tasarım Kalıpları Nedir?
+Design Pattern, tekrar eden yazılım problemlerine yönelik evrensel ve test edilmiş çözümlerdir. Karmaşık yapıları basitleştirmek, sürdürülebilirliği artırmak için kullanılır.
+	🎯 Kısaca: "Bu sorunu daha önce yaşayanlar bunu şöyle çözmüş."
+
+🧩 ABAP’ta En Çok Kullanılan Tasarım Kalıpları
+
+🔸 1. Singleton Pattern
+📌 Amaç:
+Bir sınıfın yalnızca tek bir örneği (instance) oluşturulsun. Tek merkezden yönetilsin.
+🧱 Kullanım:
+
+CLASS lcl_logger DEFINITION CREATE PRIVATE.
+  PUBLIC SECTION.
+    CLASS-METHODS: get_instance RETURNING VALUE(ro_inst) TYPE REF TO lcl_logger.
+    METHODS: log_message IMPORTING iv_msg TYPE string.
+  PRIVATE SECTION.
+    CLASS-DATA: mo_instance TYPE REF TO lcl_logger.
+ENDCLASS.
+
+CLASS lcl_logger IMPLEMENTATION.
+
+  METHOD get_instance.
+    IF mo_instance IS INITIAL.
+      CREATE OBJECT mo_instance.
+    ENDIF.
+    ro_inst = mo_instance.
+  ENDMETHOD.
+
+  METHOD log_message.
+    WRITE: / 'Log:', iv_msg.
+  ENDMETHOD.
+
+ENDCLASS.
+
+START-OF-SELECTION.
+  DATA(logger) = lcl_logger=>get_instance( ).
+  logger->log_message( 'İşlem başladı.' ).
+
+  " Her çağrıda aynı nesne döner
+  DATA(again) = lcl_logger=>get_instance( ).
+  IF logger = again.
+    WRITE: / 'Aynı nesne, Singleton çalışıyor!'.
+  ENDIF.
+
+
+
+
+🔸 2. Factory Pattern
+📌 Amaç:
+Nesne oluşturma işlemi sınıf içinde merkezileştirilsin ve koşullara göre farklı türde nesneler döndürülsün.
+🧱 Örnek:
+
+
+
+INTERFACE if_hayvan.
+  METHODS: ses_cikar.
+ENDINTERFACE.
+
+CLASS lcl_kedi DEFINITION.
+  PUBLIC SECTION.
+    INTERFACES if_hayvan.
+ENDCLASS.
+
+CLASS lcl_kedi IMPLEMENTATION.
+  METHOD if_hayvan~ses_cikar.
+    WRITE: / 'Miyav!'.
+  ENDMETHOD.
+ENDCLASS.
+
+CLASS lcl_kopek DEFINITION.
+  PUBLIC SECTION.
+    INTERFACES if_hayvan.
+ENDCLASS.
+
+CLASS lcl_kopek IMPLEMENTATION.
+  METHOD if_hayvan~ses_cikar.
+    WRITE: / 'Hav hav!'.
+  ENDMETHOD.
+ENDCLASS.
+
+" Factory sınıfı
+CLASS lcl_hayvan_factory DEFINITION.
+  PUBLIC SECTION.
+    CLASS-METHODS: create_hayvan 
+      IMPORTING iv_tur TYPE string
+      RETURNING VALUE(ro_hayvan) TYPE REF TO if_hayvan.
+ENDCLASS.
+
+CLASS lcl_hayvan_factory IMPLEMENTATION.
+  METHOD create_hayvan.
+    CASE iv_tur.
+      WHEN 'kedi'.
+        CREATE OBJECT ro_hayvan TYPE lcl_kedi.
+      WHEN 'kopek'.
+        CREATE OBJECT ro_hayvan TYPE lcl_kopek.
+      WHEN OTHERS.
+        ro_hayvan = NULL.
+    ENDCASE.
+  ENDMETHOD.
+ENDCLASS.
+
+START-OF-SELECTION.
+  DATA hayvan TYPE REF TO if_hayvan.
+  hayvan = lcl_hayvan_factory=>create_hayvan( 'kopek' ).
+  IF hayvan IS BOUND.
+    hayvan->ses_cikar( ).
+  ENDIF.
+
+
+
+🔸 3. Strategy Pattern
+📌 Amaç:
+Bir işlemi farklı stratejilere göre değiştirebilir hale getirmek (örnek: sıralama, hesaplama, fiyatlandırma).
+🧱 Kullanım:
+Fiyat hesaplaması farklı kurallara göre olsun ama kod değişmesin, sadece strateji değişsin.
+
+🔸 4. Observer Pattern
+Bu aslında Event / Handler mekanizmasıdır. Yayıncı bir sınıf var, birden çok abone dinliyor. Yukarıda detaylı işledik 🎯
+
+🎯 Tasarım Kalıplarının Faydaları
+	• Kod tekrarını azaltır
+	• Genişletilebilirliği artırır (Open/Closed Principle)
+	• Test etmeyi kolaylaştırır
+	• Sınıflar arası bağımlılığı düşürür
+	• Takım çalışmasında anlaşılabilir yapılar sağlar
+
