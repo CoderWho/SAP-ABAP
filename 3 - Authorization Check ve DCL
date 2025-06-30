@@ -1,0 +1,75 @@
+🔐 CDS AUTHORIZATION CHECK & DCL (Data Control Language)
+(📌 CDS içinde kullanıcı bazlı veri güvenliği)
+
+
+🎯 Neden Bu Konuya İhtiyaç Duyarız?
+CDS View’ler veritabanı üzerinde çok güçlü sorgular çalıştırır.
+Ama şu sorular ortaya çıkar:
+	• Kullanıcı sadece kendi satış belgelerini görebilsin istiyorum.
+	• Veya bir müdür, yalnızca kendi departmanındaki verileri görsün.
+	• SAP'de SE16N gibi ekranlardan geleneksel yetkiler çalışır ama CDS’te veri satırı bazlı filtre yapmak gerekir.
+	İşte burada Authorization Check ve DCL kullanılır.
+
+
+🧠 Temel Mantık
+	ABAP kodunda AUTHORITY-CHECK yapardık ya?
+	CDS View içinde bu işi sistem kendisi yapar.
+CDS’te bunu:
+	1. @AccessControl.authorizationCheck annotation'ı ile aktif hale getiririz
+	2. DCL (Data Control Language) nesnesi ile kural tanımlarız
+
+
+🧩 Örnek Üzerinden Gidelim
+
+🔹 1. CDS View Tanımı
+
+@AbapCatalog.sqlViewName: 'ZCDS_FLIGHT_AUTH'
+@AccessControl.authorizationCheck: #CHECK
+define view ZC_FLIGHT_AUTH as select from sflight
+{
+  carrid,
+  connid,
+  fldate
+}
+
+Bu CDS normalde herkese tüm veriyi getirir.
+Ama authorizationCheck: #CHECK dediğimiz için sistem der ki:
+	“Veriyi sadece kullanıcıya yetkili olduğu kadar getiririm.”
+	
+
+🔹 2. DCL Tanımı (ZC_FLIGHT_AUTH DCL)
+
+SECDS ekranına gir → "New" → DCL nesnesi oluştur.
+
+define role ZFLIGHT_ROLE {
+  grant select on ZC_FLIGHT_AUTH
+    where carrid = aspect pfcg_auth(CARRID);
+}
+
+
+Açıklama:
+	• Bu DCL diyor ki:
+“ZC_FLIGHT_AUTH view’indeki satırlar sadece, CARRID alanı için PFCG yetkisine sahip olunan değerlerle eşleşiyorsa gelir.”
+	• Yani SAP rolünde tanımlı olan yetkilere göre (örneğin: S_CARRID = 'LH') sadece o değer gösterilir.
+
+
+📦 Sonuç: Ne Oldu?
+	1. CDS View’in içinde authorizationCheck aktifleştirildi.
+	2. DCL ile filtre kuralı tanımlandı.
+	3. Artık bu CDS’yi kim kullanırsa kullansın, veriler sadece yetkili oldukları kadar gelir.
+
+✅ Avantajları
+Özellik	Açıklama
+CDS seviyesinde güvenlik	Kod yazmadan veri erişimi kontrolü
+UI ve raporlara otomatik uygulanır	RAP, Fiori, OData hepsi uyumlu
+Satır bazlı yetkilendirme	Kullanıcı sadece izinli olduğu veriyi görür
+
+
+⚠️ Dikkat Edilmesi Gerekenler
+Uyarı	Açıklama
+DCL devreye girince veriler filtrelenir	Kodda neden veri eksik geliyor gibi hissedebilirsin :)
+#NOT_REQUIRED yazarsan kontrol yapılmaz	Genelde test CDS'lerinde kullanılır
+aspect pfcg_auth sadece yetkilendirme nesnesiyle çalışır	PFCG rolüyle eşleştirme gerekir
+
+
+
