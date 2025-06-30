@@ -1,0 +1,72 @@
+🧱 CDS VIEW EXTENSION
+(📌 “CDS Görünümlerine Alan Eklemek”)
+
+🎯 Ne İşe Yarar?
+Sen bir CDS View yazdın diyelim. Her şey güzel çalışıyor ama zamanla şöyle ihtiyaçlar doğabilir:
+	• “Bu view’e bir alan daha lazım.”
+	• “Ama orijinal view'i bozamam.”
+	• “Başka modüller de bu view'i kullanıyor, karışıklık olur.”
+İşte burada VIEW EXTENSION devreye girer.
+	CDS’i değiştirmeden, üzerine alan eklemeni sağlar.
+
+
+🧠 Mantığı
+	Bir nevi “CDS’e miras gibi ekleme yapmak” diyebiliriz.
+	Böylece hem orijinal yapı korunur, hem senin ihtiyaçların karşılanır.
+
+🔧 Temel Sözdizimi
+🔹 Orijinal View (ZC_FLIGHT_BASE)
+
+@AbapCatalog.sqlViewName: 'ZCDS_FLIGHT'
+define view ZC_FLIGHT_BASE as select from sflight
+{
+  carrid,
+  connid,
+  fldate
+}
+
+🔹 Extension View (Alan ekleniyor)
+
+extend view ZC_FLIGHT_BASE with ZC_FLIGHT_EXT
+{
+  price,
+  currency
+}
+
+
+Açıklama:
+	• extend view: CDS’yi genişletiyoruz.
+	• with: Genişletmenin adı (ZC_FLIGHT_EXT)
+	• Süslü parantez içinde ek alanları tanımlarız.
+
+🔄 Nasıl Çalışır?
+	• Sistem derlenirken ana view ve extension'lar birleştirilir.
+	• Sen ZC_FLIGHT_BASE view’ini sorguladığında price ve currency alanları da gelmiş olur.
+	• Ama orijinal view koduna dokunmazsın.
+
+✅ Avantajları
+Özellik	Açıklama
+Orijinal yapıyı bozmadan geliştirme	Başka geliştiricileri etkilemeden değişiklik yaparsın
+Tekrarlı CDS yaratmayı engeller	Sadece ihtiyacın olanı eklersin
+Bakım kolaylığı	Kim ne eklemiş rahatça takip edilir
+Versiyon kontrolü kolaylaşır	Özellikle ekip projelerinde fark yaratır
+
+⚠️ Dikkat Edilmesi Gerekenler
+Kısıtlama	Açıklama
+JOIN veya WHERE ekleyemezsin	Sadece alan eklenebilir
+association ekleyebilirsin ama dikkatli kullan	Zamanla karmaşa olabilir
+Alanlar, ana view'de zaten seçilmiş alanlardan olmalı	SELECT içinde olmayan alanı ekleyemezsin
+
+
+🧪 Gerçek Hayat Örneği
+Diyelim ki:
+	• Temel CDS: Satış belgeleri (vbak)
+	• Sen netwr, waerk gibi değerleri görmek istiyorsun ama başka modül bu view’i kullanıyor.
+Sen sadece bu alanları kendi uzantınla eklersin:
+
+extend view ZC_SALES_HEADER with ZC_SALES_EXT
+{
+  netwr,
+  waerk
+}
+
