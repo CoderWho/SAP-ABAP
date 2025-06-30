@@ -1,0 +1,96 @@
+⚡ CDS View Performans Tüyoları ve En İyi Pratikler
+(📌 CDS’leri hızlı, okunabilir ve güvenli yazmanın yolları)
+
+🎯 Neden Bu Konu Önemli?
+CDS view'ler güçlüdür ama bilinçsizce kullanıldığında:
+	• Sistemi yavaşlatabilir,
+	• Gereksiz büyük veriler çeker,
+	• Karmaşık, anlaşılmaz hale gelir.
+	Özellikle Fiori/OData/RAP projelerinde performans kritik bir konudur.
+
+🧠 Temel Strateji: “Az veri, doğru yapı, sade ilişki”
+
+🔟 En İyi 10 Pratik (Detaylarıyla)
+
+✅ 1. Küçük başla: Az alan, az tablo
+	Gereksiz tüm alanları veya join’leri çıkar.
+
+Yanlış:
+select * from vbak
+
+Doğru:
+select vbeln, erdat from vbak
+
+
+✅ 2. ASSOCIATION kullan, JOIN’i dikkatli kullan
+	• JOIN her zaman çalışır, ama her sorguda tabloyu zorunlu getirir.
+	• ASSOCIATION sadece alan kullanıldığında veri çeker → daha verimli!
+
+✅ 3. View’ü parçalara ayır (VDM Katmanı Kullan)
+	• Basic – Composite – Consumption yapısı:
+		○ Daha sade
+		○ Daha kolay test edilir
+		○ Daha az coupling (bağımlılık)
+
+✅ 4. Filter propagation (filtre aktarımı) kullan
+
+
+association [0..1] to ZCUSTOMER as _customer
+  on vbak.kunnr = _customer.kunnr
+  and _customer.country = 'TR'
+
+
+Eğer _customer.country gibi filtreyi CDS içinden belirlemezsen, UI’den gelen filtreler otomatik geçer → bu daha doğrudur.
+
+
+✅ 5. CDS içindeki hesaplamaları minimize et
+	Çok karmaşık hesaplar gerekiyorsa AMDP (ABAP Managed Database Procedure) tercih et.
+	CDS, CASE, COALESCE, CAST gibi fonksiyonları destekler ama fazlası yorar.
+
+✅ 6. WHERE yerine parametrik CDS kullan
+
+define view with parameters p_date: sflight-fldate
+
+Böylece kullanıcı sadece ihtiyacı kadar veriyi çeker, tüm tabloyu değil.
+
+
+✅ 7. @Analytics.measure / dimension doğru tanımla
+Analitik view’lerde bu ayrım performans ve anlam açısından kritiktir:
+
+@Analytics.measure: true
+netwr,
+
+@Analytics.dimension: true
+vkorg
+
+✅ 8. Projection yap: sadece kullanılacak alanları çıkar
+Özellikle composite view’lerde:
+
+define view ZCOMP_SALES as select from ZBASIC_SALES_HEADER {
+  vbeln, erdat, kunnr
+}
+
+→ SELECT * asla kullanma!
+
+
+✅ 9. Index’li alanlar üzerinde filtrele
+SAP HANA’da bile, WHERE vbeln = ... gibi anahtar alanlara filtre koymak çok daha hızlıdır.
+Join'ler de bu alanlarla yapılırsa daha iyi çalışır.
+
+✅ 10. Test et, ST05 kullan, SQL Planı oku
+	• CDS view’ini SE16N, RSRTS_ODP_DIS veya SE11 ile test et.
+	• ST05 ile performans trace yap.
+	• HANA Studio varsa PlanViz ile execution plan analiz et.
+
+
+🎁 Ekstra Tüyolar
+İpucu	Açıklama
+@AccessControl.authorizationCheck: #NOT_REQUIRED test için faydalıdır	Ama üretimde mutlaka #CHECK kullan
+@AbapCatalog.compiler.compareFilter ile filtre davranışı kontrol edilebilir	Genelde özel ihtiyaçlarda kullanılır
+@Semantics.amount.currencyCode ile Fiori’de tutar görünümü iyileştirilir	Para birimi ile birlikte görünür
+
+
+🧠 Pratik Kural:
+	Her CDS sadece bir işi yapmalı.
+	“Tek sorumluluk ilkesi” (Single Responsibility Principle) burada da geçerli!
+
