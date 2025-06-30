@@ -8,5 +8,5 @@ Bu repoda SAP ABAP ile ilgili öğrenme kaynakları, yapılandırılmış notlar
 
 ## 🌐 Select Language / Dil Seçimi
 
-- 🇬🇧 [View English README](/README_EN.md)
-- 🇹🇷 [Türkçe README'yi Görüntüle](/README_TR.md)
+- 🇬🇧 [View English README](/README_EN)
+- 🇹🇷 [Türkçe README'yi Görüntüle](/README_TR)
