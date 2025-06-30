@@ -1,0 +1,83 @@
+🔹 4. Event / Listener Mekanizması
+
+❓ Nedir Bu?
+Event (Olay): Bir sınıf içinde tanımlanır. O sınıfta veya başka sınıflarda meydana gelen olayları temsil eder.
+Listener (Dinleyici): Bu olaya abone olan ve olay gerçekleştiğinde bir metod çalıştıran yapı.
+🧠 Gerçek dünya benzetmesi:
+	• Etkinlik → yangın alarmı çalıyor
+	• Listener → itfaiye gelip müdahale ediyor
+
+📦 Nerelerde Kullanılır?
+	• Arayüz etkileşimlerinde (bir butona basılınca)
+	• Arka plan işlemleri tetiklenince
+	• Rapor tamamlanınca kullanıcıya bilgi vermek
+	• Uyarı sistemleri (loglama, bildirim gönderme)
+
+🧱 Temel Adımlar
+Adım	Açıklama
+EVENTS	Olay tanımı
+RAISE EVENT	Olayı tetikler
+METHODS ... FOR EVENT	Olayı dinleyecek metod
+SET HANDLER	Dinleyici tanımlama
+
+
+🔧 Uygulamalı Örnek: Olay Sistemi
+1. Yayımcı Sınıf (Publisher)
+
+CLASS lcl_bilgi_verici DEFINITION.
+  PUBLIC SECTION.
+    EVENTS: evt_bilgi.
+    METHODS: islem_yap.
+ENDCLASS.
+
+CLASS lcl_bilgi_verici IMPLEMENTATION.
+  METHOD islem_yap.
+    WRITE: / 'İşlem yapılıyor...'.
+    RAISE EVENT evt_bilgi. "Olay fırlatılıyor
+  ENDMETHOD.
+ENDCLASS.
+
+
+2. Dinleyici Sınıf (Listener)
+
+CLASS lcl_dinleyici DEFINITION.
+  PUBLIC SECTION.
+    METHODS: bilgi_al FOR EVENT evt_bilgi OF lcl_bilgi_verici.
+ENDCLASS.
+
+CLASS lcl_dinleyici IMPLEMENTATION.
+  METHOD bilgi_al.
+    WRITE: / 'Bilgi: İşlem tamamlandı!'.
+  ENDMETHOD.
+ENDCLASS.
+
+
+3. Kullanım (Main Program)
+
+START-OF-SELECTION.
+
+  DATA: bilgi_verici TYPE REF TO lcl_bilgi_verici,
+        dinleyici    TYPE REF TO lcl_dinleyici.
+
+  CREATE OBJECT bilgi_verici.
+  CREATE OBJECT dinleyici.
+
+  " Olayı yakalayacak metodu tanıtıyoruz
+  SET HANDLER dinleyici->bilgi_al FOR bilgi_verici.
+
+  " İşlem tetikleniyor → event yayılır → dinleyici cevap verir
+  CALL METHOD bilgi_verici->islem_yap.
+
+
+🎯 Ne Oldu?
+	1. lcl_bilgi_verici sınıfı bir olay tanımladı: evt_bilgi
+	2. lcl_dinleyici sınıfı bu olayı dinleyen bir metod tanımladı: bilgi_al
+	3. SET HANDLER ile bağ kuruldu
+	4. RAISE EVENT çalışınca, bilgi_al metodu otomatik tetiklendi
+
+🧠 Notlar
+	• SET HANDLER çağrısı olmazsa olay işlenmez.
+	• Dinleyici olay fırlatılmadan önce atanmalı.
+	• CLEAR komutu olay aboneliğini kaldırmaz, SET HANDLER ... FOR ALL INSTANCES ile temizlenebilir.
+	• Olaylar özellikle loosely coupled (gevşek bağlı) sistemler kurmak için idealdir.
+
