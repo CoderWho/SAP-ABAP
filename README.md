@@ -1,30 +1,12 @@
-# SAP ABAP Learning Notes 🧠
+# 📘 SAP ABAP Learning Notes / Öğrenim Notları
 
-Welcome!
+Welcome – Hoş geldiniz! 👋
 
-I created this repository as part of my personal learning journey while actively searching for new job opportunities in the SAP ABAP ecosystem. 🚀
+This repository contains SAP ABAP learning resources, structured notes, and code examples in both **English** and **Turkish**.
 
-Over the last few months, I revisited my old notes to keep my knowledge fresh and up to date. Then I thought — *why not share them with the community in a structured, readable, and helpful way?* 🤔
+Bu repoda SAP ABAP ile ilgili öğrenme kaynakları, yapılandırılmış notlar ve örnek kodlar hem **İngilizce** hem de **Türkçe** olarak sunulmaktadır.
 
-This repository currently includes two main topics:
+## 🌐 Select Language / Dil Seçimi
 
-1. **ABAP Object-Oriented Programming (OOP)** [Go TR Branch](https://github.com/CoderWho/SAP-ABAP/tree/SAP-OOP-ABAP-Turkish)
-2. **Core Data Services (CDS)** [Go TR Branch](https://github.com/CoderWho/SAP-ABAP/tree/Core-Data-Services-/-CDS-Turkish)
-
-My goal is not just to share code snippets, but also to explain the logic behind each concept step by step — to help you truly understand how things work.
-
-## 🔗 Repository Purpose
-
-- For beginners trying to grasp SAP ABAP basics 👶  
-- For developers refreshing their knowledge 💡  
-- For anyone interested in SAP’s data modeling and object-oriented programming features 🎯
-
-## ⭐️ Show Your Support
-
-If you find this useful, don’t forget to ⭐ the repo and feel free to share your feedback!  
-Contributions, suggestions, or even just a comment are always welcome. 🙏
-
----
-
-📌 [Connect with me on LinkedIn](https://www.linkedin.com/in/recepfermanhatipoglu/)  
-📁 [Back to Repository](https://github.com/CoderWho/SAP-ABAP)
+- 🇬🇧 [View English README](./README_EN.md)
+- 🇹🇷 [Türkçe README'yi Görüntüle](./README_TR.md)
