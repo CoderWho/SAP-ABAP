@@ -1,0 +1,115 @@
+🚀 CDS + RAP (Restful ABAP Programming Model)
+📌 (CDS tabanlı uygulamalarla UI’ye kadar uzanan uçtan uca geliştirme)
+
+
+
+🎯 Neden RAP?
+Eskiden Fiori için:
+	• CDS yaz
+	• SEGW’de OData tanımla
+	• ABAP’ta servis mantığını kodla
+	• UI5 ile ekran geliştir...
+Artık tüm bu süreç tek bir yapı içinde yapılabiliyor.
+İşte bu mimariye RAP (Restful ABAP Programming Model) denir.
+	CDS tabanlı veri modeli → Otomatik OData servisi → UI5 / Fiori ekranına kadar her şey bir yapıda
+
+🧠 Temel Mantık
+RAP, Model – Behavior – Binding katmanlarını içerir:
+Katman	Açıklama
+CDS View (Data Model)	Veriyi tanımlar (Entity)
+Behavior Definition / Implementation	CRUD işlemlerini tanımlar
+Service Definition / Binding	CDS’i servise dönüştürür
+Fiori UI / List Report	Son kullanıcı ekranı otomatik oluşur
+
+
+🧩 Adım Adım Örnek: Basit Sipariş Uygulaması
+1️⃣ CDS Entity View
+
+@EndUserText.label: 'Siparişler'
+@AbapCatalog.sqlViewName: 'ZORDERSV'
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+define root view entity ZI_ORDERS
+  as select from zorders
+{
+  key order_id,
+  customer_name,
+  total_amount
+}
+
+root view entity → RAP ile kullanılacak bir “business object” olduğunu belirtir
+
+2️⃣ Behavior Definition (CRUD işlemleri tanımı)
+Yeni nesil “BDEF” tanımı yapılır:
+
+behavior definition for ZI_ORDERS
+  persistent table zorders
+{
+  create;
+  update;
+  delete;
+}
+
+
+
+3️⃣ Behavior Implementation (Opsiyonel - Eğer ek mantık varsa)
+Gerekirse BIMP nesnesiyle işlem kodu yazılır.
+Örnek: total_amount otomatik hesaplansın gibi.
+
+
+method create.
+
+  LOOP AT entities INTO DATA(order).
+    order-total_amount = '100'. "örnek sabit değer
+  ENDLOOP.
+
+endmethod.
+
+
+4️⃣ Service Definition
+CDS view’lerini servis olarak tanımlarız:
+
+
+define service ZI_ORDERS_SRV {
+  expose ZI_ORDERS;
+}
+
+
+5️⃣ Service Binding
+Bu servis neye bağlanacak?
+	• Fiori Elements?
+	• OData V4?
+	• Web API?
+
+"Binding Type: OData V4 - UI"
+
+Yayına alındığında /sap/opu/odata4/sap/... şeklinde bir URL oluşur
+
+6️⃣ Fiori Uygulaması
+Hiç kod yazmadan:
+	• CDS alanları otomatik UI component’larına dönüşür
+	• @UI.lineItem, @UI.identification gibi annotation’larla ekranın tasarımı belirlenir
+
+🎁 Örnek CDS UI Annotation
+
+@UI: {
+  lineItem: [{ position: 10 }],
+  identification: [{ position: 10 }]
+}
+customer_name,
+
+
+
+✅ RAP’in Faydaları
+Özellik	Açıklama
+CRUD işlemleri otomatik	ABAP'ta tek satır kod yazmadan ekle/güncelle/sil
+Modern OData (V4) desteği	Daha hızlı, RESTful, performanslı
+UI5 ile tam uyum	CDS annotation’ları UI’ye otomatik yansır
+Test edilebilirlik yüksek	Her katman bağımsız test edilebilir
+
+
+🚧 Dikkat Edilecekler
+Uyarı	Açıklama
+CDS mutlaka root view entity olmalı	RAP sadece view entity ile çalışır
+OData V4 binding olmalı	SEGW değil, yeni binding modeli kullanılır
+Transactional değilse readonly binding yapılabilir	Örn: sadece raporlama amaçlı ekranlar
+
