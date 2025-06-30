@@ -15,7 +15,8 @@
 
 main
  > SAP-OOP-ABAP-Turkish 
+ > Core Data Services "CDS" - Turkish
 
 // 2025-06-30 -> Added SAP OOP ABAP branch in Turkish Language
-
+// 2025-06-30 -> Added Core Data Services branch in Turkish Language
 
