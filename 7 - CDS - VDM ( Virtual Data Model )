@@ -1,0 +1,103 @@
+🏛️ VDM – Virtual Data Model
+(📌 SAP’nin CDS için önerdiği katmanlı model yapısı)
+
+
+🎯 Neden VDM?
+CDS view’leri geliştirirken rastgele değil, belli bir katmanlı yapı içinde oluşturmak SAP’nin önerdiği mimari yaklaşımdır.
+Bu yapıya VDM (Virtual Data Model) denir.
+	Amaç: yeniden kullanılabilir, okunabilir, bakımı kolay ve standartlara uygun CDS view’ler üretmek.
+
+
+🧠 VDM’in 3 Katmanı
+SAP VDM’i 3 temel CDS katmanına ayırır:
+
+
+🔹 1. Basic View (Temel Katman)
+Özellikler
+Doğrudan veritabanı tablolarına bağlanır (SFLIGHT, VBAK vs.)
+Minimum iş mantığı içerir
+Field-level tanımlamalar yapılır
+Association tanımlanabilir
+
+📌 Annotation:
+@VDM.viewType: #BASIC
+
+
+🔹 2. Composite View (Orta Katman)
+Özellikler
+1 veya daha fazla basic view’i birleştirir
+JOIN, ASSOCIATION, hesaplamalar yapılır
+Karmaşık veri ilişkileri burada tanımlanır
+İş mantığı bu katmanda yer alır
+
+📌 Annotation:
+@VDM.viewType: #COMPOSITE
+
+
+🔹 3. Consumption View (Sunum Katmanı)
+Özellikler
+Fiori, OData, UI gibi dış sistemlerin kullandığı son view
+@OData.publish, @UI.* gibi annotation’lar burada kullanılır
+Sadece gösterilecek alanları içerir
+
+📌 Annotation:
+@VDM.viewType: #CONSUMPTION
+
+
+🧩 Örnek: Satış Belgeleri CDS Zinciri
+1️⃣ Basic View (VBAK)
+
+@AbapCatalog.sqlViewName: 'ZVBAS'
+@VDM.viewType: #BASIC
+define view ZBASIC_SALES_HEADER as select from vbak {
+  vbeln,
+  erdat,
+  kunnr,
+  vkorg
+}
+
+
+2️⃣ Composite View (Join ile müşteri verisi de alınır)
+
+@AbapCatalog.sqlViewName: 'ZVCOMP_SALES'
+@VDM.viewType: #COMPOSITE
+define view ZCOMP_SALES as select from ZBASIC_SALES_HEADER as header
+  association [0..1] to kna1 as _customer on header.kunnr = _customer.kunnr
+{
+  key header.vbeln,
+  header.erdat,
+  header.vkorg,
+  _customer.name1 as customer_name
+}
+
+
+3️⃣ Consumption View (UI için)
+
+@AbapCatalog.sqlViewName: 'ZVCONS_SALES'
+@VDM.viewType: #CONSUMPTION
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@OData.publish: true
+define view ZCONSUME_SALES as select from ZCOMP_SALES {
+  key vbeln,
+  erdat,
+  vkorg,
+  customer_name
+}
+
+Artık bu view OData servisine, Fiori ekranına ya da analiz ekranına bağlanabilir.
+
+
+📐 VDM’in Faydaları
+Faydası	Açıklama
+Ayrı görevler net ayrılır	Veri çekme – işleme – gösterme ayrı view’lerde
+Tekrar kullanılabilirlik	Basic ve composite view’ler farklı yerlerde kullanılabilir
+Standardizasyon	SAP’nin hazır CDS view’leri de bu yapıya uyar
+Bakım kolaylığı	Hangi katmanda hangi iş var hemen anlaşılır
+
+
+📌 SAP'nin Kendi CDS View’leri de VDM yapısına uyar!
+Eğer bir S/4HANA sistemin varsa, SAP’nin kendi view’lerinde genelde şöyle isimler görürsün:
+	• I_... → Interface view (genelde Basic)
+	• C_... → Consumption view
+	• P_... → Parameterized view
+
