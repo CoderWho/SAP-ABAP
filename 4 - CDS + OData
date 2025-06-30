@@ -1,0 +1,109 @@
+🌐 CDS + OData
+(📌 CDS View’i OData Servisine Dönüştürme)
+
+
+🎯 Neden Bunu Yapıyoruz?
+CDS View ile verimizi modelledik, filtreledik, yetkilendirdik.
+Şimdi bu veriyi:
+	• Bir Fiori uygulamasına
+	• Bir mobil app’e
+	• Veya harici bir servise
+aktarabilir hale getirmemiz gerekiyor.
+	İşte OData, SAP’nin bu veri aktarımı için kullandığı web servisi mimarisidir.
+
+
+🧠 Temel Mantık
+	CDS View’e küçük bir @OData.publish: true annotation’ı eklersin.
+	SAP, senin yerine tüm OData servis altyapısını otomatik kurar.
+
+⚙️ 3 Adımda CDS → OData Servisi
+
+✅ 1. CDS View'i Tanımla
+
+@AbapCatalog.sqlViewName: 'ZCDS_FLIGHT_OD'
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@OData.publish: true
+define view ZC_FLIGHT_ODATA as select from sflight
+{
+  carrid,
+  connid,
+  fldate,
+  price,
+  currency
+}
+
+
+🔹 Önemli olan satır:
+@OData.publish: true
+
+Bu satır sayesinde sistem, bir OData servis entity'si oluşturur.
+
+
+
+✅ 2. Servisi Yayına Al (T-Code: /IWFND/MAINT_SERVICE)
+	1. SEGW'ye gitmene gerek yok!
+	2. /IWFND/MAINT_SERVICE ekranına gir
+	3. Sağ üstte “Add Service” de:
+		○ System Alias: (default_local olabilir)
+		○ Technical Service Name: ZC_FLIGHT_ODATA_CDS
+	4. “Add Selected Services” ile servisi aktif et
+	Artık bu servisin URL’i hazır:
+
+Swift:
+/sap/opu/odata/sap/ZC_FLIGHT_ODATA_CDS/
+
+✅ 3. Test Et
+Web tarayıcında aç:
+
+Swift: 
+/sap/opu/odata/sap/ZC_FLIGHT_ODATA_CDS/$metadata
+
+
+• Bu URL, servisin yapısını XML olarak gösterir (alanlar, tipler, vs.)
+• Veriyi görmek için:
+
+
+Swift:
+/sap/opu/odata/sap/ZC_FLIGHT_ODATA_CDS/ZC_FLIGHT_ODATA
+
+JSON veya XML formatında tüm uçuş bilgileri gelir.
+
+
+
+🔧 Ek Özellik: Annotation ile UI Kontrolü
+
+
+@UI.lineItem: [ { position: 10 } ]
+carrid,
+
+@UI.lineItem: [ { position: 20 } ]
+connid,
+
+@UI.hidden: true
+currency
+
+
+OData üzerinden bu servis bir Fiori Elements uygulamasına bağlandığında:
+• Hangi alanın listede gösterileceği
+• Hangi alanın gizli kalacağı belirlenmiş olur
+
+
+✅ Avantajları
+Özellik	Açıklama
+Kod yazmadan servis üretimi	SEGW’ye gerek yok
+Hızlı Fiori geliştirme	UI5 + CDS çok kolay
+UI açıklamaları CDS’te	Tek kaynaktan modelleme
+
+
+⚠️ Dikkat Edilecekler
+Uyarı	Açıklama
+CDS View adı ile servis adı farklı	CDS: ZC_FLIGHT_ODATA → Servis: ZC_FLIGHT_ODATA_CDS
+Değişiklikten sonra servisi “re-register” gerekebilir	Özellikle yeni alan eklersen
+OData cache’i temizle	/IWFND/CACHE_CLEANUP T-Code işe yarar
+
+
+🧪 Bonus: Fiori Elements ile Entegrasyon
+SAP GUI → Fiori App Reference Library → Template: List Report Page
+	• CDS’in üzerine sıfır kodla Fiori uygulaması oluşturabilirsin.
+	• CDS içinde yaptığın UI tanımlamaları doğrudan uygulamaya yansır.
+
