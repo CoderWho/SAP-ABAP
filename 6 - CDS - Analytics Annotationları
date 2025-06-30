@@ -1,0 +1,99 @@
+📊 CDS + Analytics (Cube & Query)
+(📌 CDS ile KPI, grafik, analiz ekranı üretmek)
+
+
+🎯 Neden Gerekli?
+SAP sistemlerinde analiz ekranları, KPI’lar, dashboard’lar sıklıkla kullanılır.
+Eskiden bunlar için BW (Business Warehouse) sistemleri gerekirdi. Ama artık:
+	CDS + @Analytics.* annotation’ları ile SAP sisteminde yerel analiz yapılabiliyor.
+
+
+
+🧠 Temel Kavramlar
+SAP bu yapıyı 2 katmanda kurar:
+1. Cube View
+	• Veriyi “ölçüm + boyut” olarak hazırlar.
+	• Ham verinin raporlanabilir hale geldiği katmandır.
+2. Query View
+	• Cube View’in üzerine kuruludur.
+	• KPI, ölçümler, filtreler, görünüm ayarları buraya yazılır.
+
+🧩 Gerçek Örnek: Satış Tutarı Analizi
+
+
+
+🔹 1. Cube View: 
+
+@AbapCatalog.sqlViewName: 'ZCUBE_SALES'
+@Analytics.dataCategory: #CUBE
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+define view ZC_SALES_CUBE as
+  select from vbak
+{
+  vbeln,
+  vkorg,
+  kunnr,
+  @Analytics.measure: true
+  @EndUserText.label: 'Net Tutar'
+  netwr,
+
+  @Analytics.dimension: true
+  @EndUserText.label: 'Müşteri'
+  kunnr,
+
+  @Analytics.dimension: true
+  @EndUserText.label: 'Satış Organizasyonu'
+  vkorg
+}
+
+
+Açıklama:
+	• @Analytics.dataCategory: #CUBE → Bu view bir analitik veri kümesidir.
+	• @Analytics.measure: true → Sayısal analiz yapılacak alan (ör: tutar)
+	• @Analytics.dimension: true → Gruplama/filtreleme yapılacak alan
+
+
+
+🔹 2. Query View: 
+
+@AbapCatalog.sqlViewName: 'ZQUERY_SALES'
+@Analytics.query: true
+define view ZQ_SALES_QUERY
+  as select from ZC_SALES_CUBE
+{
+  vbeln,
+  vkorg,
+  kunnr,
+  netwr
+}
+
+
+• @Analytics.query: true → Bu view bir rapor/sorgudur
+• Fiori veya SAC (SAP Analytics Cloud) ile bağlandığında bu sorgu direkt rapora dönüşebilir
+
+
+📺 Nerede Görülür?
+	• Fiori uygulamalarında “Smart Business KPIs” ve “List Reports”
+	• SAP Analytics Cloud (SAC) ile bağlanıldığında doğrudan rapor kaynağı olur
+	• RSRTS_ODP_DIS ile SAP GUI üzerinden test edilebilir
+
+✅ Avantajları
+Özellik	Açıklama
+Kod yazmadan rapor	Sadece annotation’larla güçlü analizler
+Fiori ve SAC ile entegre	CDS doğrudan veri kaynağı olur
+Realtime raporlama	BW’ye gerek kalmadan ECC/HANA içinden analiz
+
+
+⚠️ Dikkat Edilecekler
+Uyarı	Açıklama
+Measure ve Dimension’lar doğru ayrılmalı	Tutar, adet gibi alanlar → measure
+Cube view üzerine query kurmalısın	Query olmadan analiz yapılamaz
+Karmaşık hesaplamalar CDS’te sınırlıdır	AMDP veya Calculation View daha uygundur
+
+
+🧪 Bonus: KPI Tanımı Fiori’de
+CDS query view’in varsa:
+	1. Fiori Launchpad’de KPI modeli tanımlarsın
+	2. CDS alanlarıyla gösterge panoları oluşturursun
+	3. Bu işlemler “Smart Business” framework ile olur
+
