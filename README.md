@@ -9,7 +9,7 @@ Over the last few months, I revisited my old notes to keep my knowledge fresh an
 This repository currently includes two main topics:
 
 1. **ABAP Object-Oriented Programming (OOP)**
-2. **Core Data Services (CDS)**
+2. **Core Data Services (CDS)** [Go Branch](https://github.com/CoderWho/SAP-ABAP/tree/Core-Data-Services-/-CDS-Turkish)
 
 My goal is not just to share code snippets, but also to explain the logic behind each concept step by step — to help you truly understand how things work.
 
