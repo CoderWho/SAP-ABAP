@@ -1,0 +1,104 @@
+🏷️ CDS ANNOTATIONS
+(📌 CDS’e Anlam Katan Etiketler)
+
+
+🎯 Ne İşe Yarar?
+CDS, sadece veriyi çeken bir yapı değildir.
+Aynı zamanda bu verinin:
+	• Kullanıcı arayüzünde nasıl gösterileceğini
+	• OData ile nasıl sunulacağını
+	• Yetki kontrollerinin nasıl yapılacağını
+	• Geliştiriciye hangi bilgilerin gösterileceğini
+...belirleyebildiğin bir “anlam katmanı”dır.
+İşte bu anlamları Annotation’lar (etiketler) ile tanımlarız.
+
+🧠 Mantığı
+	Annotation'lar = “CDS'e metadata eklemek”tir.
+	Yani “bu alan ne işe yarıyor, nasıl kullanılmalı” gibi bağlamsal bilgiler veririz.
+
+
+🧩 Örneklerle Gidelim
+🔹 1. UI Etiketleri
+
+@AbapCatalog.sqlViewName: 'ZCDS_FLIGHT_ANN'
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+define view ZC_FLIGHT_ANN as select from sflight
+{
+  @UI: {
+    lineItem: [ { position: 10 } ],
+    identification: [ { position: 10 } ]
+  }
+  carrid,
+
+  @UI.lineItem: [ { position: 20 } ]
+  connid,
+
+  @UI.hidden: true
+  planetype
+}
+
+Açıklamalar:
+Annotation	Ne işe yarar?
+@UI.lineItem	Liste ekranında alan gözüksün
+@UI.identification	Detay ekranında göster
+@UI.hidden: true	UI'da hiç gösterme
+
+	Yani bu CDS bir Fiori ekranına bağlandığında, hangi alan görünsün? Ne sırayla? Bunu kontrol ediyorsun.
+	
+	
+🔹 2. Label / Açıklama
+
+@EndUserText.label: 'Flight Listesi CDS View'
+define view ZC_FLIGHT_LABEL as select from sflight
+{
+  @EndUserText.label: 'Taşıyıcı Kodu'
+  carrid,
+
+  @EndUserText.label: 'Uçuş Numarası'
+  connid
+}
+
+CDS veya alanlar için kullanıcı dostu açıklama verilir.
+SE11, Fiori, OData gibi yerlerde bu açıklamalar görünür.
+
+🔹 3. OData Servis Açıklığı
+
+@OData.publish: true
+define view ZC_FLIGHT_ODATA as select from sflight
+{
+  carrid,
+  connid,
+  fldate
+}
+
+Bu sayede CDS otomatik olarak bir OData servisine dönüşebilir!
+/IWFND/MAINT_SERVICE üzerinden yayına alabilirsin.
+
+
+🔹 4. Authorization Check
+
+@AccessControl.authorizationCheck: #CHECK
+define view ZC_FLIGHT_AUTH as select from sflight
+{
+  carrid,
+  connid
+}
+
+Bu annotation ile view’de yetkilendirme kontrolü yapılacağı belirtilir.
+DCL (Data Control Language) ile hangi veriye kimin erişeceği belirlenir. (Bunu sonraki konuda ele alacağız.)
+
+🔧 En Çok Kullanılan Annotation Grupları
+Annotation Grubu	Ne işe yarar?
+@EndUserText.*	Etiketleme, açıklama
+@UI.*	Fiori UI kontrolü
+@OData.*	OData ayarları
+@AccessControl.*	Yetki yönetimi
+@Analytics.*	Raporlama / analiz kontrolü
+@VDM.*	SAP’nin VDM standardı ile uyumluluk (advanced)
+
+✅ Özetle
+Annotation’lar sayesinde:
+	• CDS sadece bir “veri çekme aracı” değil, bir UI tanımlayıcısı olur.
+	• Daha az kodla daha anlamlı ve kullanılabilir yapı kurarsın.
+	• CDS + Annotation = Model-Driven Development (model bazlı geliştirme) yaklaşımının temeli.
+
