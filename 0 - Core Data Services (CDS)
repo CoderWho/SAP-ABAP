@@ -1,0 +1,214 @@
+CDS’in temel amacı:
+	SAP HANA’nın sunduğu gücü kullanarak veriye daha hızlı ve anlamlı erişmek, iş mantığını (örneğin hesaplama, filtreleme, yetkilendirme) veritabanı seviyesine çekmektir.
+	
+	
+
+🧠 CDS'in Felsefesi
+	“Data-to-code” değil, “code-to-data” prensibi.
+Yani veriyi uygulamaya taşımak yerine, iş mantığını verinin olduğu yere, veritabanına taşırız. Bu da:
+	• Daha az veri transferi,
+	• Daha az bellek kullanımı,
+	• Çok daha iyi performans demek.
+
+Örnek ;
+
+@AbapCatalog.sqlViewName: 'ZCDS_SFLIGHT'
+define view ZC_SFLIGHT as select from sflight
+{
+  carrid,
+  connid,
+  fldate,
+  price
+}
+
+
+Bu ne yapar?
+	• ZC_SFLIGHT adında bir CDS view oluşturur.
+	• Bu view aslında bir SELECT carrid, connid, fldate, price FROM sflight sorgusudur.
+	• Ama artık bu sorguya SAP'nin her yerinden erişebilirsin: başka CDS'lerde, RAP'ta, OData'da, Fiori'de…
+CDS, aslında SQL’in SAP’ye entegre, gelişmiş ve metadatalı versiyonudur.
+
+
+
+🔍 Önemli Kavramlar
+🔸 @AbapCatalog.sqlViewName
+	• CDS, ABAP seviyesinde bir SQL View’e bağlanır.
+	• Bu, SE11’de görebileceğin fiziksel bir view oluşturur.
+🔸 define view
+	• Yeni bir CDS tanımlıyorsun.
+🔸 select from ... {}
+	• Bildiğimiz SELECT sorgusunun daha güçlü versiyonu.
+
+
+✅ CDS’te Öğreneceğimiz Diğer Mantıksal Yapılar:
+	1. JOIN – Tablo ilişkileriyle veriyi birleştirme
+	2. ASSOCIATION – JOIN’in daha akıllı versiyonu
+	3. PARAMETRİK CDS – CDS’e dışarıdan parametre alma
+	4. VIEW EXTENSION – Mevcut bir CDS’e alan ekleme
+	5. ANNOTATION – CDS’in metadata beyni (örneğin: OData görünürlüğü)
+	6. AUTHORIZATION CHECK – CDS seviyesinde yetki kontrolü
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+👉 JOIN ve ASSOCIATION farkı nedir?
+
+🔍 JOIN Nedir? (Klasik Yaklaşım)
+JOIN, veritabanı sorgularında iki veya daha fazla tabloyu birbirine bağlamak için kullandığımız yapıdır. ABAP'ta da SQL’de de şöyle kullanırız:
+
+@AbapCatalog.sqlViewName: 'ZCDS_JOIN_EX'
+define view ZC_SFLIGHT_JOIN as 
+  select from sflight as f
+  inner join scarr as c on f.carrid = c.carrid
+{
+  f.carrid,
+  f.connid,
+  f.fldate,
+  c.carrname
+}
+
+
+	Ama bu klasik JOIN, her zaman birlikte çalışmak için çok uygun değildir. Çünkü:
+	• Tabloları sabit şekilde bağlar,
+	• Esneklik azdır,
+	• Kod karmaşıklaşır.
+
+
+🔗 ASSOCIATION Nedir? (CDS’e Özel, Akıllı JOIN)
+	ASSOCIATION = JOIN + akıllı ilişki + kolay kullanım
+CDS’te JOIN yerine çoğunlukla association kullanılır. Bu sayede:
+	• İlişkiyi tanımlarız, ama kullanmak zorunda değiliz.
+	• Sonradan “ekran” gibi yerlerde ilişkili veri lazım olursa otomatik gelir.
+	• Performans avantajı sağlar, çünkü kullanılmayan veri çekilmez.
+
+
+🎓 Örnek Üzerinden Anlayalım
+🧱 İki tablo: sflight ve scarr
+	• sflight: Uçuş bilgileri
+	• scarr: Havayolu firmaları (Lufthansa, THY vs.)
+Her uçuş bir havayoluna bağlıdır (carrid üzerinden).
+
+✅ JOIN ile CDS
+
+@AbapCatalog.sqlViewName: 'ZCDS_JOIN_EX'
+define view ZC_SFLIGHT_JOIN as 
+  select from sflight as f
+  inner join scarr as c on f.carrid = c.carrid
+{
+  f.carrid,
+  f.connid,
+  f.fldate,
+  c.carrname
+}
+
+
+Burada klasik JOIN kullandık.
+	• Zorunlu bağladık.
+	• scarr tablosunun bilgisi her zaman gelir.
+
+✅ ASSOCIATION ile CDS
+
+@AbapCatalog.sqlViewName: 'ZCDS_ASSOC_EX'
+define view ZC_SFLIGHT_ASSOC as 
+  select from sflight as f
+  association [0..1] to scarr as _carrier 
+    on f.carrid = _carrier.carrid
+{
+  f.carrid,
+  f.connid,
+  f.fldate,
+  _carrier.carrname
+}
+❓ Ne fark etti?
+	• association bir “tanım”dır, JOIN değil.
+	• _carrier artık bir ilişki nesnesidir.
+	• CDS seni zorlamaz: sadece istiyorsan carrname gibi alanları kullanırsın.
+	• Eğer UI5, RAP, Fiori gibi yapılarda bu CDS kullanılırsa, bu ilişki otomatik tamamlanır (harika bir şey bu 🚀).
+
+
+
+🤔 Ne Zaman JOIN, Ne Zaman ASSOCIATION?
+Durum	JOIN	ASSOCIATION
+Zorunlu bağlı tablo	✅	✅
+Esnek bağlı tablo	❌	✅
+View içinde direkt kullanılacaksa	✅	✅
+RAP/Fiori'de kullanılacaksa	❌	✅✅✅
+Performans önemliyse	❌ (ağır olur)	✅ (lazy fetch)
+
+
+
+📘 PARAMETRELİ CDS VIEW
+("CDS View with Parameters")
+
+🎯 Ne İşe Yarar?
+CDS ile tanımladığın bir görünüm bazen dinamik filtre ister:
+	• Belirli bir tarih
+	• Kullanıcının girdiği bir müşteri numarası
+	• Sadece o günkü veriler gibi
+	Böyle durumlarda, CDS’e dışarıdan parametre göndermek gerekir.
+	İşte bu “parametreli CDS” (CDS with Parameters) ile yapılır.
+
+🧠 Mantığı
+	Normalde SELECT ... WHERE içinde sabit koşullar koyarsın.
+	Ama parametreli CDS, bu koşulları dinamik hale getirmeni sağlar.
+
+
+🔧 Temel Sözdizimi
+
+define view ZC_FLIGHT_PARAM 
+  with parameters 
+    p_carrid : s_carr_id
+as select from sflight
+where carrid = :p_carrid
+{
+  carrid,
+  connid,
+  fldate
+}
+
+Açıklama:
+	• with parameters kısmı: CDS'e dışarıdan bir parametre tanımlar.
+	• :p_carrid ifadesi: CDS içinde bu parametreyi kullanırız.
+
+
+
+
+🔄 Kullanımı (ABAP Kodu İçinden)
+Parametreli CDS view'i doğrudan SELECT ile kullanamazsın. Onun yerine OPEN SQL değil, AMDP, ABAP SQL, ya da SELECT FROM VIEW ENTITY gibi modern yöntemler gerekir.
+ABAP’tan kullanım örneği:
+
+
+SELECT * 
+  FROM ZC_FLIGHT_PARAM( p_carrid = 'LH' ) 
+  INTO TABLE @DATA(result).
+
+
+🔎 Gerçek Senaryo Örneği
+Bir Fiori ekranında:
+	• Kullanıcı havayolu (carrid) giriyor.
+	• CDS içinde sadece o taşıyıcının uçuşları gösteriliyor.
+	Eğer bunu parametresiz yapsaydık, tüm uçuşları getirmek gerekirdi. Performans düşerdi.
+
+🧩 Parametreli CDS ile Association Kullanımı
+Parametreli CDS içinde başka tablolara association yapılabilir, ama dikkat:
+	• Association içinde parametre kullanılamaz.
+
+define view ZC_FLIGHT_PARAM2 
+  with parameters p_date : sflight-fldate
+as select from sflight as f
+  association [0..1] to scarr as _carrier
+    on f.carrid = _carrier.carrid
+where f.fldate >= :p_date
+{
+  f.carrid,
+  f.connid,
+  f.fldate,
+  _carrier.carrname
+}
+
+
+✅ Avantajları
+Özellik	Açıklama
+Dinamik koşul	View’e dışarıdan filtre gönderebilirsin
+Performans	Gereksiz veri çekmeden doğrudan filtreli
+Tekrarlı sorgu	Rapor veya ekranlar için esnek yapı
+
